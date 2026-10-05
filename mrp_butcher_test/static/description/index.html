@@ -1,0 +1,93 @@
+# MRP Butcher Test – Dynamic Output Cost Allocation & Inventory Valuation (Odoo 20)
+
+[![Odoo Version](https://img.shields.io/badge/Odoo-20.0-purple.svg)](https://www.odoo.com/)
+[![License](https://img.shields.io/badge/License-LGPL--3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0.html)
+
+## 📌 Overview
+
+In traditional manufacturing, Odoo assigns fixed cost-sharing percentages (`cost_share`) to by-products. However, in meat processing (butchery), dairy processing, and disassembly industries, **the yield of each output product varies dynamically from one production order to another** (e.g., individual animal carcasses produce different yields of prime cuts, regular cuts, minced meat, and bones).
+
+The **MRP Butcher Test** module introduces a dynamic costing mechanism that allocates actual manufacturing costs (raw materials + work center operations) across all outputs based on **actual produced quantities** and a configurable **Relative Importance (%)** weighting factor.
+
+---
+
+## 🚀 Key Features
+
+* **Configurable on BoMs:** Toggle `Butcher Test` on any normal BoM (`mrp.bom.type = 'normal'`).
+* **Outputs Configuration Tab:** Configure `Relative Importance (%)` for the main product and all by-products directly on the BoM. Weightings do not need to total 100%.
+* **Live Dynamic Costing Tab on MO:** Displays transparent calculation steps during manufacturing:
+  * Product
+  * BoM Relative Importance %
+  * Actual Produced Quantity (Main product from `qty_producing`, by-products from `stock.move`)
+  * Actual Quantity Share % (informational)
+  * Relative Quantity
+  * Common Relative Price / Unit
+  * Total Allocated Output Cost
+  * Final Unit Cost
+* **Manual Recompute Action:** Recalculate figures on-demand while the Manufacturing Order is open/in progress.
+* **Proportional Rounding Reconciliation:** Distributes cent-level rounding differences across outputs proportionally based on their Relative Importance %, guaranteeing 100% exact reconciliation with actual production costs.
+* **Cost Freezing:** Automatically locks and freezes costing figures once marked **Done**, preventing retroactive recalculation or reversal entries.
+* **Root-Level Odoo 20 Valuation Replacement:** Directly values finished stock moves (`stock.move.value` and `price_unit`) and builds native accounting journal entries (`account.move`) at validation time without requiring separate adjustment entries.
+* **Standard Odoo Preserved:** BoMs with `Butcher Test = False` behave 100% according to standard Odoo workflows.
+
+---
+
+## 📐 Mathematical Cost Allocation Chain
+
+For each output $i$:
+
+1. **Relative Quantity:**
+   $$\text{Relative Quantity}_i = \left(\frac{\text{Relative Importance } \%_i}{100}\right) \times \text{Actual Produced Quantity}_i$$
+
+2. **Total Relative Quantity:**
+   $$\text{Total Relative Quantity} = \sum \text{Relative Quantity}_i$$
+
+3. **Relative Price (Common Rate):**
+   $$\text{Relative Price} = \frac{\text{Total Actual Production Cost}}{\text{Total Relative Quantity}}$$
+
+4. **Total Cost per Output:**
+   $$\text{Total Output Cost}_i = \text{Relative Quantity}_i \times \text{Relative Price} \pm \text{Rounding Adjustment}_i$$
+
+5. **Final Cost per Unit:**
+   $$\text{Cost per Unit}_i = \frac{\text{Total Output Cost}_i}{\text{Actual Produced Quantity}_i}$$
+
+---
+
+## 🥩 Real-World Butchery Example
+
+**Production Inputs:**
+* **Total Actual Production Cost:** $50,000.00 (Beef Carcass + Butchery Operations)
+
+| Output Product | Relative Importance % | Actual Quantity | Relative Qty | Total Output Cost | Final Unit Cost |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Prime Cut** (Main) | 40% | 80 kg | 32.0 | **$21,621.62** | **$270.27 / kg** |
+| **Regular Cut** (By-product) | 30% | 100 kg | 30.0 | **$20,270.27** | **$202.70 / kg** |
+| **Minced Meat** (By-product) | 20% | 50 kg | 10.0 | **$6,756.76** | **$135.14 / kg** |
+| **Bones** (By-product) | 10% | 20 kg | 2.0 | **$1,351.35** | **$67.57 / kg** |
+| **Total** | | **250 kg** | **74.0** | **$50,000.00** | |
+
+* **Total Relative Quantity:** $32 + 30 + 10 + 2 = 74.0$
+* **Relative Price:** $50,000 \div 74 = 675.6757$
+* **Rounding Reconciliation:** Fully balanced to the penny.
+
+---
+
+## ⚙️ Odoo 20 Technical Architecture
+
+Odoo 20 replaced `stock.valuation.layer` with direct valuation tracking on `stock.move` (`move.value`) and `product.value`. This module seamlessly integrates into Odoo 20's core lifecycle:
+* Overrides `mrp.production._cal_price` to dynamically set output move `price_unit` values directly at Done.
+* Overrides `stock.move._get_value_from_production` to bind the exact allocated `total_cost` (inclusive of rounding adjustments) directly to the financial stock move and generated `account.move` entries.
+
+---
+
+## 📦 Requirements & Dependencies
+
+* Odoo 20.0 Community or Enterprise
+* `mrp`
+* `mrp_account`
+* `stock_account`
+
+---
+
+## 📄 License
+LGPL-3 (GNU Lesser General Public License v3.0).
