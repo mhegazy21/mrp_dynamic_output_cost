@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mrp_bom_form_view_inherit_butcher_test" model="ir.ui.view">
+        <field name="name">mrp.bom.form.inherit.butcher.test</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='type']" position="after">
+                <field name="butcher_test" invisible="type != 'normal'"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Butcher Test Outputs" name="butcher_test_outputs" invisible="not butcher_test or type != 'normal'">
+                    <div class="mb-2">
+                        <button name="action_sync_butcher_outputs" string="Sync Outputs" type="object" class="btn btn-secondary btn-sm"/>
+                    </div>
+                    <field name="butcher_output_ids">
+                        <list editable="bottom">
+                            <field name="product_id"/>
+                            <field name="relative_importance"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

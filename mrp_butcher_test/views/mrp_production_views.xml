@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mrp_production_form_view_inherit_butcher_test" model="ir.ui.view">
+        <field name="name">mrp.production.form.inherit.butcher.test</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Butcher Test Costing" name="butcher_test_costing" invisible="not is_butcher_test">
+                    <field name="is_butcher_test" invisible="1"/>
+                    <div class="mb-3">
+                        <button name="action_recompute_butcher_cost"
+                                string="Recompute"
+                                type="object"
+                                class="btn btn-primary"
+                                invisible="state in ('draft', 'done', 'cancel')"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="butcher_total_production_cost"/>
+                            <field name="butcher_total_relative_qty"/>
+                            <field name="butcher_relative_price"/>
+                        </group>
+                    </group>
+                    <field name="butcher_line_ids" readonly="state == 'done'">
+                        <list create="0" delete="0">
+                            <field name="product_id"/>
+                            <field name="relative_importance"/>
+                            <field name="actual_qty"/>
+                            <field name="actual_qty_share"/>
+                            <field name="relative_qty"/>
+                            <field name="relative_price"/>
+                            <field name="total_cost"/>
+                            <field name="cost_per_unit"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
